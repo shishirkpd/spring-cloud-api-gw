@@ -25,13 +25,13 @@ public class GatewayConfig {
     @Bean
     public RouterFunction<ServerResponse> route(WebClient webClient) {
         return RouterFunctions.route()
-                .GET("/api/service1/**", this::handleService1Request)
-                .GET("/api/service2/**", this::handleService2Request)
+                .GET("/products/**", this::handleService1Request)
+                .GET("/users/**", this::handleService2Request)
                 .build();
     }
 
     private Mono<ServerResponse> handleService1Request(ServerRequest request) {
-        String backendServiceUrl = "http://localhost:8081" + request.uri().getPath();
+        String backendServiceUrl = "https://dummyjson.com" + request.uri().getPath();
         WebClient webClient = WebClient.create(); // Create a new WebClient instance
         logger.info("Routing the url to: {}", backendServiceUrl);
         return webClient.get()
@@ -43,7 +43,7 @@ public class GatewayConfig {
     }
 
     private Mono<ServerResponse> handleService2Request(ServerRequest request) {
-        String backendServiceUrl = "http://localhost:8083" + request.uri().getPath();
+        String backendServiceUrl = "https://dummyjson.com" + request.uri().getPath();
         WebClient webClient = WebClient.create(); // Create a new WebClient instance
         logger.info("Routing the url to: {}", backendServiceUrl);
         return webClient.get()
