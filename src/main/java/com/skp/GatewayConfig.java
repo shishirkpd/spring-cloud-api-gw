@@ -1,8 +1,9 @@
 package com.skp;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.server.RouterFunction;
@@ -14,14 +15,15 @@ import reactor.core.publisher.Mono;
 @Configuration
 public class GatewayConfig {
 
-    private final WebClient webClient;
+    private static final Logger logger = LoggerFactory.getLogger(GatewayConfig.class);
 
-    public GatewayConfig(WebClient.Builder webClientBuilder) {
-        this.webClient = webClientBuilder.build();
+    @Bean
+    public WebClient webClient() {
+        return WebClient.create("");
     }
 
     @Bean
-    public RouterFunction<ServerResponse> route() {
+    public RouterFunction<ServerResponse> route(WebClient webClient) {
         return RouterFunctions.route()
                 .GET("/api/service1/**", this::handleService1Request)
                 .GET("/api/service2/**", this::handleService2Request)
@@ -30,6 +32,8 @@ public class GatewayConfig {
 
     private Mono<ServerResponse> handleService1Request(ServerRequest request) {
         String backendServiceUrl = "http://localhost:8081" + request.uri().getPath();
+        WebClient webClient = WebClient.create(); // Create a new WebClient instance
+        logger.info("Routing the url to: {}", backendServiceUrl);
         return webClient.get()
                 .uri(backendServiceUrl)
                 .retrieve()
@@ -39,18 +43,14 @@ public class GatewayConfig {
     }
 
     private Mono<ServerResponse> handleService2Request(ServerRequest request) {
-        String backendServiceUrl = "http://localhost:8082" + request.uri().getPath();
+        String backendServiceUrl = "http://localhost:8083" + request.uri().getPath();
+        WebClient webClient = WebClient.create(); // Create a new WebClient instance
+        logger.info("Routing the url to: {}", backendServiceUrl);
         return webClient.get()
                 .uri(backendServiceUrl)
                 .retrieve()
                 .bodyToMono(String.class)
                 .flatMap(response -> ServerResponse.ok().bodyValue(response))
                 .onErrorResume(error -> ServerResponse.status(HttpStatus.INTERNAL_SERVER_ERROR).build());
-    }
-
-    @Bean
-    @Lazy
-    public WebClient.Builder webClientBuilder() {
-        return WebClient.builder();
     }
 }
